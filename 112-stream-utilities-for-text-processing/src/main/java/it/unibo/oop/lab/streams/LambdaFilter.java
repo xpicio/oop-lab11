@@ -6,7 +6,10 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.LayoutManager;
 import java.awt.Toolkit;
+import java.util.List;
+import java.util.Locale;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -27,18 +30,36 @@ import javax.swing.JTextArea;
  *
  * 4) List all the words in alphabetical order
  * 
- * 5) Write the count for each word, e.g. "word word pippo" should output "pippo -> 1 word -> 2"
+ * 5) Write the count for each word, e.g. "word word pippo" should output "pippo
+ * -> 1 word -> 2"
  *
  */
 public final class LambdaFilter extends JFrame {
 
     private static final long serialVersionUID = 1760990730218643730L;
+    private static final String WORD_SEPARATOR = "\\s+";
 
     private enum Command {
         /**
          * Commands.
          */
-        IDENTITY("No modifications", Function.identity());
+        IDENTITY("No modifications", Function.identity()),
+        TO_LOWER_CASE("To lowercase", x -> x.toLowerCase(Locale.US)),
+        CHARACTER_COUNT("Count number of chars", x -> String.valueOf(x.length())),
+        LINES_COUNT("Count number of lines",
+                x -> String.valueOf(x.split(System.getProperty("line.separator")).length)),
+        ASC_ORDER("Ascending order",
+                x -> List.of(x.split(WORD_SEPARATOR)).stream()
+                        .sorted()
+                        .collect(Collectors.joining(System.getProperty("line.separator"), "", ""))),
+        WORD_COUNT("Count words",
+                x -> List.of(x.split(WORD_SEPARATOR)).stream()
+                        .collect(Collectors.groupingBy(k -> k, Collectors.counting()))
+                        .entrySet()
+                        .stream()
+                        .sorted((i, y) -> Long.compare(i.getValue(), y.getValue()))
+                        .map(y -> y.getKey() + " : " + y.getValue())
+                        .collect(Collectors.joining(System.getProperty("line.separator"), "", "")));
 
         private final String commandName;
         private final Function<String, String> fun;
